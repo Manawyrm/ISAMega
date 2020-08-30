@@ -139,8 +139,7 @@ uint8_t ioIndexedRead(uint32_t address, uint8_t index)
 
 void setup()
 {
-	Serial.begin(1000000);
-	Serial.println("HW init.");
+	Serial.begin(115200);
 
 	PORT_ADDR0 = 0x00;
 	PORT_ADDR8 = 0x00;
@@ -173,16 +172,21 @@ void setup()
 	delay(100);
 	digitalWrite(PIN_RESET, LOW);
 	delay(1000);
-	Serial.println("HW init done.");
 
+	Serial.print("R");
+	Serial.print('\n');
 }
 
 char textBuf[32];
+
+String command;
+String address;
+String data; 
 void loop()
 {
 
-	Serial.println("IO Space:");
-	for (uint32_t i = 0x03B0UL; i < 0x03D0UL; i++)
+/*	Serial.println("IO Space:");
+	for (uint32_t i = 0x03A0UL; i < 0x03F0UL; i++)
 	{
 		if (i % 16 == 0)
 		{
@@ -203,7 +207,7 @@ void loop()
 	Serial.println();
 
 	Serial.println("Memory Space from 0xA0000:");
-	for (uint32_t i = 0xC0000UL; i < 0xC0100UL; i++)
+	for (uint32_t i = 0xC0000UL; i < 0xC7FFFUL; i++)
 	{
 		if (i % 16 == 0)
 		{
@@ -218,9 +222,27 @@ void loop()
 		snprintf(textBuf, 31, "%02x", memRead(i));
 		Serial.print(textBuf);
 	}
-
-	while (1)
+*/
+	command = Serial.readStringUntil('\n');
+	if (command.length() != 0)
 	{
-		
+		if (command[0] == 'i')
+		{
+			address = command.substring(1, 5);
+			Serial.print("i");
+			Serial.print(ioRead((int) strtol( &address[0], NULL, 16)), HEX);
+			Serial.print('\n');
+		}
+
+		if (command[0] == 'o')
+		{			
+			address = command.substring(1, 5);
+			data = command.substring(5, 7);
+
+			ioWrite((int) strtol( &address[0], NULL, 16), (int) strtol( &data[0], NULL, 16));
+
+			Serial.print("o\n");
+		}
 	}
+	
 }
