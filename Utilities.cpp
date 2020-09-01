@@ -78,20 +78,19 @@ void memWrite(uint32_t address, uint8_t data)
 	PORT_ADDR16 = (address >> 16) & 0xFF;
 
 	digitalWrite(PIN_ALE, HIGH);
-
 	digitalWrite(PIN_ALE, LOW);
 
 	PORT_DATA = data;
 	DDR_DATA = 0xFF;
 
-	digitalWrite(PIN_MEMW, LOW);
+	digitalWrite(PIN_MEMR, LOW);
 	delayMicroseconds(10);
 
 	while (!digitalRead(PIN_IOCHRDY))
 	{
 	}
 	
-	digitalWrite(PIN_MEMW, HIGH);
+	digitalWrite(PIN_MEMR, HIGH);
 	delayMicroseconds(10);
 
 	DDR_DATA = 0x00;
@@ -174,8 +173,11 @@ void setup()
 	digitalWrite(PIN_RESET, LOW);
 	delay(1000);
 
-	Serial.print("R");
-	Serial.print('\n');
+//	Serial.print("R");
+//	Serial.print('\n');
+
+
+
 
 	PORT_ADDR0 = 0x00;
 	PORT_ADDR8 = 0x00;
@@ -196,14 +198,89 @@ uint16_t currentPin = 0;
 
 void loop()
 {
- 	command = Serial.readStringUntil('\n');
+
+//	Serial.println("IO Space:");
+	for (uint32_t i = 0x03A0UL; i < 0x03F0UL; i++)
+	{
+		/*if (i % 16 == 0)
+		{
+			Serial.println();
+
+			snprintf(textBuf, 31, "%08lx", i);
+			Serial.print("Address: 0x");
+			Serial.print(textBuf);
+			Serial.print(": ");
+		}*/
+
+		//Serial.print(ioRead(i));
+
+		//snprintf(textBuf, 31, "%02x", ioRead(i));
+		//Serial.print(textBuf);
+	}
+	
+	
+		
+//	Serial.println();
+
+//	Serial.println("Memory Space from 0xA0000:");
+	for (uint32_t i = 0xC0000UL; i < 0xC8000UL; i++)
+	{
+			Serial.write(memRead(i));
+	}
+	while (1){}
+
+		/*if (i % 16 == 0)
+		{
+			Serial.println();
+
+			snprintf(textBuf, 31, "%08lx", i);
+			Serial.print("Address: 0x");
+			Serial.print(textBuf);
+			Serial.print(": ");
+		}
+
+		snprintf(textBuf, 31, "%02x", memRead(i));
+		Serial.print(textBuf);*/
+	}
+
+
+	/*
+	if (Serial.available())
+	{
+		uint8_t data = Serial.read();
+		if (data == '+')
+		{
+			currentPin++;
+			//Serial.print('+\n');
+		}
+
+		if (data == '-')
+		{			
+			currentPin--;
+			//Serial.print("-\n");
+		}
+
+		Serial.print("Leitung D");
+		Serial.print(currentPin);
+		Serial.println();
+
+		uint32_t address = (1UL << currentPin); 
+		PORT_DATA = address & 0xFF;
+
+		sprintf(textBuf,"data: %02X\n", PORT_DATA);
+		Serial.println(textBuf);
+	}
+*/
+
+	
+ /* 	command = Serial.readStringUntil('\n');
 	if (command.length() != 0)
 	{
 		if (command[0] == 'i')
 		{
 			address = command.substring(1, 5);
 			Serial.print("i");
-			Serial.print(ioRead((uint32_t) strtol( &address[0], NULL, 16)), HEX);
+			Serial.print(ioRead((int) strtol( &address[0], NULL, 16)), HEX);
 			Serial.print('\n');
 		}
 
@@ -212,28 +289,10 @@ void loop()
 			address = command.substring(1, 5);
 			data = command.substring(5, 7);
 
-			ioWrite((uint32_t) strtol( &address[0], NULL, 16), (uint8_t) strtol( &data[0], NULL, 16));
+			ioWrite((int) strtol( &address[0], NULL, 16), (int) strtol( &data[0], NULL, 16));
 
 			Serial.print("o\n");
 		}
-
-        if (command[0] == 'r')
-		{
-			address = command.substring(1, 7);
-			Serial.print("r");
-			Serial.print(memRead((uint32_t) strtol( &address[0], NULL, 16)), HEX);
-			Serial.print('\n');
-		}
-
-		if (command[0] == 'w')
-		{			
-			address = command.substring(1, 7);
-			data = command.substring(7, 9);
-
-			memWrite((uint32_t) strtol( &address[0], NULL, 16), (uint8_t) strtol( &data[0], NULL, 16));
-
-			Serial.print("w\n");
-		}
-	}
+	}*/
 	
 }
