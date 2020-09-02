@@ -27,6 +27,9 @@ void ioWrite(uint32_t address, uint8_t data)
 	PORT_ADDR8 = (address >> 8) & 0xFF;
 	PORT_ADDR16 = (address >> 16) & 0xFF;
 
+	//digitalWrite(PIN_ALE, HIGH);
+	//digitalWrite(PIN_ALE, LOW);
+
 	PORT_DATA = data;
 	DDR_DATA = 0xFF;
 
@@ -43,7 +46,7 @@ void ioWrite(uint32_t address, uint8_t data)
 	DDR_DATA = 0x00;
 }
 
-uint8_t	ioRead(uint32_t address)
+uint8_t ioRead(uint32_t address)
 {
 	uint8_t data = 0x00;
 
@@ -51,8 +54,8 @@ uint8_t	ioRead(uint32_t address)
 	PORT_ADDR8 = (address >> 8) & 0xFF;
 	PORT_ADDR16 = (address >> 16) & 0xFF;
 
-	digitalWrite(PIN_ALE, HIGH);
-	digitalWrite(PIN_ALE, LOW);
+	//igitalWrite(PIN_ALE, HIGH);
+	//digitalWrite(PIN_ALE, LOW);
 
 	PORT_DATA = 0xFF; // pullup data bus
 	DDR_DATA = 0x00;
@@ -77,9 +80,9 @@ void memWrite(uint32_t address, uint8_t data)
 	PORT_ADDR8 = (address >> 8) & 0xFF;
 	PORT_ADDR16 = (address >> 16) & 0xFF;
 
-	digitalWrite(PIN_ALE, HIGH);
+	//digitalWrite(PIN_ALE, HIGH);
 
-	digitalWrite(PIN_ALE, LOW);
+	//digitalWrite(PIN_ALE, LOW);
 
 	PORT_DATA = data;
 	DDR_DATA = 0xFF;
@@ -90,7 +93,7 @@ void memWrite(uint32_t address, uint8_t data)
 	while (!digitalRead(PIN_IOCHRDY))
 	{
 	}
-	
+
 	digitalWrite(PIN_MEMW, HIGH);
 	delayMicroseconds(10);
 
@@ -101,13 +104,13 @@ uint8_t memRead(uint32_t address)
 {
 	uint8_t data = 0x00;
 
-	digitalWrite(PIN_ALE, HIGH);
 
 	PORT_ADDR0 = address & 0xFF;
 	PORT_ADDR8 = (address >> 8) & 0xFF;
 	PORT_ADDR16 = (address >> 16) & 0xFF;
 
-	digitalWrite(PIN_ALE, LOW);
+	//digitalWrite(PIN_ALE, HIGH);
+	//digitalWrite(PIN_ALE, LOW);
 
 	PORT_DATA = 0xFF; // pullup data bus
 	DDR_DATA = 0x00;
@@ -137,7 +140,6 @@ uint8_t ioIndexedRead(uint32_t address, uint8_t index)
 	return ioRead(address + 1);
 }
 
-
 void setup()
 {
 	Serial.begin(115200);
@@ -156,10 +158,10 @@ void setup()
 	digitalWrite(PIN_IOR, HIGH);
 
 	digitalWrite(PIN_RESET, HIGH);
-	digitalWrite(PIN_ALE, LOW); 
 	digitalWrite(PIN_AEN, LOW);
+	digitalWrite(PIN_ALE, HIGH);
 
-	digitalWrite(PIN_IOCHRDY, HIGH);  // Pull-UP
+	digitalWrite(PIN_IOCHRDY, HIGH); // Pull-UP
 
 	pinMode(PIN_MEMW, OUTPUT);
 	pinMode(PIN_MEMR, OUTPUT);
@@ -169,6 +171,7 @@ void setup()
 	pinMode(PIN_RESET, OUTPUT);
 	pinMode(PIN_ALE, OUTPUT);
 	pinMode(PIN_AEN, OUTPUT);
+
 
 	delay(100);
 	digitalWrite(PIN_RESET, LOW);
@@ -190,50 +193,49 @@ char textBuf[32];
 
 String command;
 String address;
-String data; 
+String data;
 
-uint16_t currentPin = 0; 
+uint16_t currentPin = 0;
 
 void loop()
 {
- 	command = Serial.readStringUntil('\n');
+	command = Serial.readStringUntil('\n');
 	if (command.length() != 0)
 	{
 		if (command[0] == 'i')
 		{
 			address = command.substring(1, 5);
 			Serial.print("i");
-			Serial.print(ioRead((uint32_t) strtol( &address[0], NULL, 16)), HEX);
+			Serial.print(ioRead((uint32_t)strtol(&address[0], NULL, 16)), HEX);
 			Serial.print('\n');
 		}
 
 		if (command[0] == 'o')
-		{			
+		{
 			address = command.substring(1, 5);
 			data = command.substring(5, 7);
 
-			ioWrite((uint32_t) strtol( &address[0], NULL, 16), (uint8_t) strtol( &data[0], NULL, 16));
+			ioWrite((uint32_t)strtol(&address[0], NULL, 16), (uint8_t)strtol(&data[0], NULL, 16));
 
 			Serial.print("o\n");
 		}
 
-        if (command[0] == 'r')
+		if (command[0] == 'r')
 		{
 			address = command.substring(1, 7);
 			Serial.print("r");
-			Serial.print(memRead((uint32_t) strtol( &address[0], NULL, 16)), HEX);
+			Serial.print(memRead((uint32_t)strtol(&address[0], NULL, 16)), HEX);
 			Serial.print('\n');
 		}
 
 		if (command[0] == 'w')
-		{			
+		{
 			address = command.substring(1, 7);
 			data = command.substring(7, 9);
 
-			memWrite((uint32_t) strtol( &address[0], NULL, 16), (uint8_t) strtol( &data[0], NULL, 16));
+			memWrite((uint32_t)strtol(&address[0], NULL, 16), (uint8_t)strtol(&data[0], NULL, 16));
 
 			Serial.print("w\n");
 		}
 	}
-	
 }
