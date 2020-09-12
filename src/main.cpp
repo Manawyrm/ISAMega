@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <TimerOne.h>
 
 #define PIN_MEMW 21
 #define PIN_MEMR 20
@@ -22,7 +21,6 @@
 #define DDR_ADDR8 DDRC
 #define DDR_ADDR16 DDRL
 #define DDR_DATA DDRK
-volatile uint8_t refreshState = 1;
 
 void ioWrite(uint32_t address, uint8_t data)
 {
@@ -79,6 +77,9 @@ uint8_t ioRead(uint32_t address)
 
 void memWrite(uint32_t address, uint8_t data)
 {
+	PORT_DATA = data;
+	DDR_DATA = 0xFF;
+
 	PORT_ADDR0 = address & 0xFF;
 	PORT_ADDR8 = (address >> 8) & 0xFF;
 	PORT_ADDR16 = (address >> 16) & 0xFF;
@@ -87,18 +88,15 @@ void memWrite(uint32_t address, uint8_t data)
 
 	//digitalWrite(PIN_ALE, LOW);
 
-	PORT_DATA = data;
-	DDR_DATA = 0xFF;
-
 	digitalWrite(PIN_MEMW, LOW);
-	delayMicroseconds(10);
+	//delayMicroseconds(10);
 
 	while (!digitalRead(PIN_IOCHRDY))
 	{
 	}
 
 	digitalWrite(PIN_MEMW, HIGH);
-	delayMicroseconds(10);
+	//delayMicroseconds(10);
 
 	DDR_DATA = 0x00;
 }
@@ -118,7 +116,7 @@ uint8_t memRead(uint32_t address)
 	PORT_DATA = 0xFF; // pullup data bus
 	DDR_DATA = 0x00;
 	digitalWrite(PIN_MEMR, LOW);
-	delayMicroseconds(10);
+	//delayMicroseconds(10);
 
 	while (!digitalRead(PIN_IOCHRDY))
 	{
@@ -127,7 +125,7 @@ uint8_t memRead(uint32_t address)
 	data = PIN_DATA;
 
 	digitalWrite(PIN_MEMR, HIGH);
-	delayMicroseconds(10);
+	//delayMicroseconds(10);
 
 	return data;
 }
@@ -153,13 +151,9 @@ uint8_t ioIndexedRead(uint32_t address, uint8_t index)
 	return ioRead(address + 1);
 }*/
 
-void refreshDRAM()
+void refreshInterrupt()
 {
-	refreshState = 0;
-	digitalWrite(PIN_REFRESH, 0);
-	delayMicroseconds(15);
-	digitalWrite(PIN_REFRESH, 1);
-	refreshState = 1;
+	while (!digitalRead(PIN_REFRESH)) {}
 }
 
 void setup()
@@ -179,7 +173,7 @@ void setup()
 	digitalWrite(PIN_IOW, HIGH);
 	digitalWrite(PIN_IOR, HIGH);
 	digitalWrite(PIN_REFRESH, HIGH);
-
+	
 	digitalWrite(PIN_AEN, LOW);
 	digitalWrite(PIN_ALE, HIGH);
 
@@ -189,7 +183,8 @@ void setup()
 	pinMode(PIN_MEMR, OUTPUT);
 	pinMode(PIN_IOW, OUTPUT);
 	pinMode(PIN_IOR, OUTPUT);
-	pinMode(PIN_REFRESH, OUTPUT);
+	pinMode(PIN_REFRESH, INPUT_PULLUP);
+	attachInterrupt(digitalPinToInterrupt(PIN_REFRESH), refreshInterrupt, FALLING);
 
 	pinMode(PIN_ALE, OUTPUT);
 	pinMode(PIN_AEN, OUTPUT);
@@ -209,13 +204,8 @@ void setup()
 	DDR_ADDR8 = 0xFF;  // [A8:A15]
 	DDR_ADDR16 = 0xFF; // [A16:A19]
 
-	//Timer1.initialize(15000);
-	//Timer1.attachInterrupt(refreshDRAM);
-
 	Serial.print("R");
 	Serial.print('\n');
-
-	
 }
 
 uint8_t command;
